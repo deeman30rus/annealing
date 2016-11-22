@@ -1,35 +1,35 @@
-class Optimizer:
-    __costs = []
-    __teams_max = 0
-    __works_max = 0
+import math
+import random
 
-    def __init__(self, filename):
-        with open(filename) as file:
-            wt = file.readline()
+funcs = {
+    'random_state': None,
+    'next_state': None,
+    'energy': None,
+    'temperature': None,
+}
 
-            self.__works_max, self.__teams_max = tuple(map(int, wt.split()))
-            self.__costs = [[int(num) for num in line.split()] for line in file.readlines()]
+def optimize():
+    for value in funcs.values():
+        assert value is not None
 
-    def human_best(self):
-        schedule = {team_id: [] for team_id in range(self.__teams_max)}
+    random_state = funcs['random_state']
+    next_state = funcs['next_state']
+    energy = funcs['energy']
+    temperature = funcs['temperature']
 
-        for work in range(self.__works_max):
-            min_len = len(min(schedule.values(), key=lambda value: len(value)))
+    seq = random_state()
 
-            ct = [key for key, value in schedule.items() if len(value) == min_len]
+    for t in temperature():
 
-            best_team = min(ct, key=lambda team_id: self.__costs[team_id][work])
+        cur = next_state(seq)
 
-            schedule[best_team].append(work)
+        delta = energy(cur) - energy(seq)
 
-        return schedule
+        if delta <= 0:
+            seq = cur
+        else:
+            p = math.exp(-delta / t)
+            if random.random() < p:
+                seq = cur
 
-
-def main():
-    optimizer = Optimizer('w500t10.txt')
-
-    print(optimizer.human_best())
-
-
-if __name__ == '__main__':
-    main()
+    return seq
